@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge'
 const navItems = [
   {
     label: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: LayoutDashboard,
     badge: null,
   },
