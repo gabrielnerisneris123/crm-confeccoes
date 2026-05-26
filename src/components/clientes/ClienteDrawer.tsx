@@ -17,7 +17,7 @@ import { TagBadge } from './TagBadge'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { mockPedidos } from '@/lib/mock-data'
+import { usePedidosStore } from '@/stores/pedidosStore'
 import { useRouter } from 'next/navigation'
 
 interface ClienteDrawerProps {
@@ -35,6 +35,7 @@ export function ClienteDrawer({
   onEditar,
 }: ClienteDrawerProps) {
   const router = useRouter()
+  const { pedidos: todosPedidos } = usePedidosStore()
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -45,7 +46,7 @@ export function ClienteDrawer({
   }, [open, onClose])
 
   const pedidos = cliente
-    ? mockPedidos.filter((p) => p.cliente_id === cliente.id)
+    ? todosPedidos.filter((p) => p.cliente_id === cliente.id)
     : []
 
   const iniciais = cliente

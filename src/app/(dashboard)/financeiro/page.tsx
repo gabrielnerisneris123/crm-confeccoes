@@ -54,9 +54,10 @@ export default function FinanceiroPage() {
     .sort((a, b) => (b.valor_final - b.valor_pago) - (a.valor_final - a.valor_pago))
     .slice(0, 6)
 
-  // Recentes pagos
+  // Recentes pagos (ordenados por data do pedido, mais recentes primeiro)
   const recentesPagos = pedidosAtivos
     .filter((p) => p.status_pagamento === 'pago')
+    .sort((a, b) => new Date(b.data_pedido).getTime() - new Date(a.data_pedido).getTime())
     .slice(0, 5)
 
   const taxaAdimplencia = pedidosAtivos.length > 0

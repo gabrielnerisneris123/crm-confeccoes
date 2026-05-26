@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
-  ChevronLeft, Edit, Send, CheckCircle, XCircle,
-  User, Calendar, Clock, Package, MessageCircle, ArrowRight,
+  ChevronLeft, Edit, Trash2, Send, CheckCircle, XCircle,
+  User, Clock, Package, MessageCircle, ArrowRight,
 } from 'lucide-react'
 import { Orcamento } from '@/types'
 
@@ -25,7 +25,7 @@ const STATUS_CFG: Record<Orcamento['status'], { label: string; bg: string; cor: 
 export default function OrcamentoDetalhePage() {
   const params = useParams()
   const router = useRouter()
-  const { getOrcamentoById, alterarStatus, atualizarOrcamento } = useOrcamentosStore()
+  const { getOrcamentoById, alterarStatus, atualizarOrcamento, removerOrcamento } = useOrcamentosStore()
   const { adicionarPedido } = usePedidosStore()
   const { clientes } = useClientesStore()
 
@@ -152,6 +152,18 @@ export default function OrcamentoDetalhePage() {
               )}
               <Button variant="outline" onClick={() => router.push(`/orcamentos/${orc.id}/editar`)}>
                 <Edit className="w-4 h-4" /> Editar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm(`Excluir orçamento "${orc.numero}"? Esta ação não pode ser desfeita.`)) {
+                    removerOrcamento(orc.id)
+                    router.push('/orcamentos')
+                  }
+                }}
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" /> Excluir
               </Button>
             </div>
           </div>

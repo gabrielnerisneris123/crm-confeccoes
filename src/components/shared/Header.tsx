@@ -34,7 +34,9 @@ export function Header({ titulo, subtitulo }: HeaderProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           placeholder="Buscar pedidos, clientes..."
-          className="pl-9 w-72 bg-slate-50 border-slate-200 text-sm h-9"
+          className="pl-9 w-72 bg-slate-50 border-slate-200 text-sm h-9 cursor-default"
+          readOnly
+          onFocus={(e) => e.target.blur()}
         />
       </div>
 

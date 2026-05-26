@@ -113,6 +113,7 @@ export const mockPedidos: Pedido[] = [
     tipo_entrega: 'retirada',
     criado_em: '2024-05-21T00:00:00Z',
     atualizado_em: '2024-05-21T00:00:00Z',
+    itens: [],
   },
   {
     id: 'P003',
@@ -132,6 +133,7 @@ export const mockPedidos: Pedido[] = [
     tipo_entrega: 'correios',
     criado_em: '2024-05-22T00:00:00Z',
     atualizado_em: '2024-05-22T00:00:00Z',
+    itens: [],
   },
   {
     id: 'P004',
@@ -151,6 +153,7 @@ export const mockPedidos: Pedido[] = [
     tipo_entrega: 'entrega',
     criado_em: '2024-05-18T00:00:00Z',
     atualizado_em: '2024-05-23T00:00:00Z',
+    itens: [],
   },
   {
     id: 'P005',
@@ -171,6 +174,7 @@ export const mockPedidos: Pedido[] = [
     tipo_entrega: 'retirada',
     criado_em: '2024-05-10T00:00:00Z',
     atualizado_em: '2024-05-16T00:00:00Z',
+    itens: [],
   },
 ]
 

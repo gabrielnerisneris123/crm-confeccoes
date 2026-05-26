@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
 import {
-  Calculator, Search, Plus, MoreHorizontal, Eye, Edit,
-  Send, CheckCircle, XCircle, Clock, TrendingUp, FileText,
+  Calculator, Search, Plus, MoreHorizontal, Eye, Edit, Trash2,
+  Send, CheckCircle, XCircle, TrendingUp, FileText,
 } from 'lucide-react'
 import { Orcamento } from '@/types'
 import { format, parseISO, isPast } from 'date-fns'
@@ -38,7 +38,7 @@ const FILTROS = [
 
 export default function OrcamentosPage() {
   const router = useRouter()
-  const { orcamentos, busca, filtroStatus, setBusca, setFiltroStatus, alterarStatus, getOrcamentosFiltrados } = useOrcamentosStore()
+  const { orcamentos, busca, filtroStatus, setBusca, setFiltroStatus, alterarStatus, removerOrcamento, getOrcamentosFiltrados } = useOrcamentosStore()
 
   const filtrados = getOrcamentosFiltrados()
 
@@ -177,6 +177,16 @@ export default function OrcamentosPage() {
                                 </DropdownMenuItem>
                               </>
                             )}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (window.confirm(`Excluir orçamento "${orc.numero}"?`)) {
+                                  removerOrcamento(orc.id)
+                                }
+                              }}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-2 text-red-500" /> Excluir
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

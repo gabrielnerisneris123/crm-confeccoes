@@ -17,6 +17,7 @@ interface ClientesState {
   adicionarCliente: (dados: Omit<Cliente, 'id' | 'criado_em' | 'atualizado_em'>) => void
   atualizarCliente: (id: string, dados: Partial<Cliente>) => void
   toggleAtivo: (id: string) => void
+  removerCliente: (id: string) => void
 
   getClienteById: (id: string) => Cliente | undefined
   getClientesFiltrados: () => Cliente[]
@@ -63,6 +64,11 @@ export const useClientesStore = create<ClientesState>((set, get) => ({
           ? { ...c, ativo: !c.ativo, atualizado_em: new Date().toISOString() }
           : c
       ),
+    })),
+
+  removerCliente: (id) =>
+    set((state) => ({
+      clientes: state.clientes.filter((c) => c.id !== id),
     })),
 
   getClienteById: (id) => get().clientes.find((c) => c.id === id),

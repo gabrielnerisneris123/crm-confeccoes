@@ -16,47 +16,8 @@ import {
   ChevronRight,
   Bell,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-
-const navItems = [
-  {
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    badge: null,
-  },
-  {
-    label: 'Clientes',
-    href: '/clientes',
-    icon: Users,
-    badge: null,
-  },
-  {
-    label: 'Pedidos',
-    href: '/pedidos',
-    icon: ShoppingBag,
-    badge: '11',
-  },
-  {
-    label: 'Produção / Kanban',
-    href: '/producao',
-    icon: Kanban,
-    badge: '2',
-    badgeVariant: 'destructive' as const,
-  },
-  {
-    label: 'Orçamentos',
-    href: '/orcamentos',
-    icon: Calculator,
-    badge: null,
-  },
-  {
-    label: 'Financeiro',
-    href: '/financeiro',
-    icon: DollarSign,
-    badge: null,
-  },
-]
+import { usePedidosStore } from '@/stores/pedidosStore'
+import { isPast, parseISO } from 'date-fns'
 
 const bottomItems = [
   {
@@ -68,6 +29,59 @@ const bottomItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { pedidos } = usePedidosStore()
+
+  // Pedidos ativos (não entregues e não cancelados)
+  const pedidosAtivos = pedidos.filter(
+    (p) => !['entregue', 'cancelado'].includes(p.status)
+  )
+
+  // Pedidos atrasados (para badge vermelho na produção)
+  const pedidosAtrasados = pedidos.filter(
+    (p) =>
+      !['entregue', 'cancelado'].includes(p.status) &&
+      isPast(parseISO(p.data_prazo))
+  )
+
+  const navItems = [
+    {
+      label: 'Dashboard',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+      badge: null as string | null,
+    },
+    {
+      label: 'Clientes',
+      href: '/clientes',
+      icon: Users,
+      badge: null as string | null,
+    },
+    {
+      label: 'Pedidos',
+      href: '/pedidos',
+      icon: ShoppingBag,
+      badge: pedidosAtivos.length > 0 ? String(pedidosAtivos.length) : null,
+    },
+    {
+      label: 'Produção / Kanban',
+      href: '/producao',
+      icon: Kanban,
+      badge: pedidosAtrasados.length > 0 ? String(pedidosAtrasados.length) : null,
+      badgeVariant: 'destructive' as const,
+    },
+    {
+      label: 'Orçamentos',
+      href: '/orcamentos',
+      icon: Calculator,
+      badge: null as string | null,
+    },
+    {
+      label: 'Financeiro',
+      href: '/financeiro',
+      icon: DollarSign,
+      badge: null as string | null,
+    },
+  ]
 
   return (
     <aside className="flex flex-col h-screen w-64 bg-[#0f172a] border-r border-[#1e293b] fixed left-0 top-0 z-40">
@@ -130,20 +144,26 @@ export function Sidebar() {
         </ul>
 
         {/* Seção Alertas */}
-        <div className="mt-6 mb-3">
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-2 mb-3">
-            Alertas
-          </p>
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mx-1">
-            <div className="flex items-start gap-2">
-              <Bell className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-red-300 text-xs font-semibold">2 pedidos atrasados</p>
-                <p className="text-red-400/70 text-[10px] mt-0.5">Ver urgentes →</p>
+        {pedidosAtrasados.length > 0 && (
+          <div className="mt-6 mb-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-2 mb-3">
+              Alertas
+            </p>
+            <Link href="/producao" className="block">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mx-1 hover:bg-red-500/20 transition-colors">
+                <div className="flex items-start gap-2">
+                  <Bell className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-red-300 text-xs font-semibold">
+                      {pedidosAtrasados.length} pedido{pedidosAtrasados.length !== 1 ? 's' : ''} atrasado{pedidosAtrasados.length !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-red-400/70 text-[10px] mt-0.5">Ver urgentes →</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Bottom */}
@@ -169,7 +189,10 @@ export function Sidebar() {
             {item.label}
           </Link>
         ))}
-        <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full mt-1">
+        <button
+          onClick={() => alert('Para fazer logout, configure a autenticação com Supabase.')}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full mt-1"
+        >
           <LogOut className="w-4 h-4" />
           Sair
         </button>

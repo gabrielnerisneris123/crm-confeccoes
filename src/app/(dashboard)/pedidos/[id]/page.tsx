@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/shared/Header'
@@ -13,9 +15,9 @@ import { Button } from '@/components/ui/button'
 import { format, parseISO, isPast } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
-  ChevronLeft, Edit, ChevronRight, User, Package,
+  ChevronLeft, Edit, Trash2, ChevronRight, User, Package,
   CreditCard, Calendar, Truck, Clock, AlertTriangle,
-  ImageIcon, MessageCircle, FileText,
+  ImageIcon, MessageCircle,
 } from 'lucide-react'
 import { STATUS_CONFIG, PedidoArte } from '@/types'
 
@@ -24,7 +26,7 @@ type Tab = 'detalhes' | 'artes' | 'timeline'
 export default function PedidoDetalhePage() {
   const params = useParams()
   const router = useRouter()
-  const { getPedidoById, avancarStatus, atualizarPedido } = usePedidosStore()
+  const { getPedidoById, avancarStatus, atualizarPedido, removerPedido } = usePedidosStore()
   const [tab, setTab] = useState<Tab>('detalhes')
   const [whatsOpen, setWhatsOpen] = useState(false)
 
@@ -42,6 +44,13 @@ export default function PedidoDetalhePage() {
         </div>
       </div>
     )
+  }
+
+  const handleExcluir = () => {
+    if (window.confirm(`Excluir pedido "${pedido.numero}"? Esta ação não pode ser desfeita.`)) {
+      removerPedido(pedido.id)
+      router.push('/pedidos')
+    }
   }
 
   const atrasado = !['entregue', 'cancelado'].includes(pedido.status) && isPast(parseISO(pedido.data_prazo))
@@ -101,6 +110,9 @@ export default function PedidoDetalhePage() {
               )}
               <Button variant="outline" onClick={() => router.push(`/pedidos/${pedido.id}/editar`)}>
                 <Edit className="w-4 h-4" /> Editar
+              </Button>
+              <Button variant="outline" onClick={handleExcluir} className="text-red-500 border-red-200 hover:bg-red-50">
+                <Trash2 className="w-4 h-4" /> Excluir
               </Button>
             </div>
           </div>

@@ -45,7 +45,7 @@ export function ArteUploader({ pedidoId, artes, onAddArte, onToggleAprovacao, on
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/')).forEach(processarArquivo)
+    Array.from(e.dataTransfer.files).forEach(processarArquivo)
   }
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {

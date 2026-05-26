@@ -3,15 +3,16 @@
 import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/shared/Header'
 import { useClientesStore } from '@/stores/clientesStore'
+import { usePedidosStore } from '@/stores/pedidosStore'
 import { TagBadge } from '@/components/clientes/TagBadge'
 import { Button } from '@/components/ui/button'
-import { mockPedidos } from '@/lib/mock-data'
 import { STATUS_CONFIG } from '@/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ChevronLeft,
   Edit,
+  Trash2,
   Phone,
   Mail,
   MessageCircle,
@@ -27,7 +28,8 @@ import {
 export default function ClienteDetalhePage() {
   const params = useParams()
   const router = useRouter()
-  const { getClienteById, toggleAtivo } = useClientesStore()
+  const { getClienteById, toggleAtivo, removerCliente } = useClientesStore()
+  const { pedidos } = usePedidosStore()
 
   const cliente = getClienteById(params.id as string)
 
@@ -55,9 +57,16 @@ export default function ClienteDetalhePage() {
     )
   }
 
-  const pedidosDoCliente = mockPedidos.filter(
+  const pedidosDoCliente = pedidos.filter(
     (p) => p.cliente_id === cliente.id
   )
+
+  const handleExcluir = () => {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${cliente.nome}"? Esta ação não pode ser desfeita.`)) {
+      removerCliente(cliente.id)
+      router.push('/clientes')
+    }
+  }
   const iniciais = cliente.nome
     .split(' ')
     .map((n) => n[0])
@@ -131,7 +140,7 @@ export default function ClienteDetalhePage() {
                 onClick={() => toggleAtivo(cliente.id)}
                 className={
                   cliente.ativo
-                    ? 'text-red-500 border-red-200 hover:bg-red-50'
+                    ? 'text-amber-600 border-amber-200 hover:bg-amber-50'
                     : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'
                 }
               >
@@ -148,12 +157,21 @@ export default function ClienteDetalhePage() {
                 )}
               </Button>
               <Button
+                variant="outline"
                 size="sm"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 onClick={() => router.push(`/clientes/${cliente.id}/editar`)}
               >
                 <Edit className="w-3.5 h-3.5" />
                 Editar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExcluir}
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Excluir
               </Button>
             </div>
           </div>
