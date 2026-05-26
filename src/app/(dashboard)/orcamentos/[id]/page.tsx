@@ -12,6 +12,7 @@ import {
   ChevronLeft, Edit, Trash2, Send, CheckCircle, XCircle,
   User, Clock, Package, MessageCircle, ArrowRight,
 } from 'lucide-react'
+import { usePermissao } from '@/hooks/usePermissao'
 import { Orcamento } from '@/types'
 
 const STATUS_CFG: Record<Orcamento['status'], { label: string; bg: string; cor: string; icone: string }> = {
@@ -28,6 +29,7 @@ export default function OrcamentoDetalhePage() {
   const { getOrcamentoById, alterarStatus, atualizarOrcamento, removerOrcamento } = useOrcamentosStore()
   const { adicionarPedido } = usePedidosStore()
   const { clientes } = useClientesStore()
+  const { podeCriarEditar, podeExcluir } = usePermissao()
 
   const orc = getOrcamentoById(params.id as string)
 
@@ -61,9 +63,9 @@ export default function OrcamentoDetalhePage() {
     ? `https://wa.me/55${orc.cliente.whatsapp}?text=${whatsappMsg}`
     : null
 
-  const converterEmPedido = () => {
+  const converterEmPedido = async () => {
     const cliente = clientes.find((c) => c.id === orc.cliente_id)
-    const pedido = adicionarPedido({
+    const pedido = await adicionarPedido({
       empresa_id: '1',
       cliente_id: orc.cliente_id,
       cliente,
@@ -130,12 +132,12 @@ export default function OrcamentoDetalhePage() {
                   </Button>
                 </a>
               )}
-              {orc.status === 'rascunho' && (
+              {podeCriarEditar && orc.status === 'rascunho' && (
                 <Button variant="outline" onClick={() => alterarStatus(orc.id, 'enviado')} className="text-blue-600 border-blue-200 hover:bg-blue-50">
                   <Send className="w-4 h-4" /> Marcar Enviado
                 </Button>
               )}
-              {orc.status === 'enviado' && (
+              {podeCriarEditar && orc.status === 'enviado' && (
                 <>
                   <Button variant="outline" onClick={() => alterarStatus(orc.id, 'rejeitado')} className="text-red-500 border-red-200 hover:bg-red-50">
                     <XCircle className="w-4 h-4" /> Rejeitar
@@ -145,26 +147,30 @@ export default function OrcamentoDetalhePage() {
                   </Button>
                 </>
               )}
-              {orc.status === 'aprovado' && !orc.convertido_pedido_id && (
+              {podeCriarEditar && orc.status === 'aprovado' && !orc.convertido_pedido_id && (
                 <Button onClick={converterEmPedido} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                   <ArrowRight className="w-4 h-4" /> Converter em Pedido
                 </Button>
               )}
-              <Button variant="outline" onClick={() => router.push(`/orcamentos/${orc.id}/editar`)}>
-                <Edit className="w-4 h-4" /> Editar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (window.confirm(`Excluir orçamento "${orc.numero}"? Esta ação não pode ser desfeita.`)) {
-                    removerOrcamento(orc.id)
-                    router.push('/orcamentos')
-                  }
-                }}
-                className="text-red-500 border-red-200 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" /> Excluir
-              </Button>
+              {podeCriarEditar && (
+                <Button variant="outline" onClick={() => router.push(`/orcamentos/${orc.id}/editar`)}>
+                  <Edit className="w-4 h-4" /> Editar
+                </Button>
+              )}
+              {podeExcluir && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (window.confirm(`Excluir orçamento "${orc.numero}"? Esta ação não pode ser desfeita.`)) {
+                      removerOrcamento(orc.id)
+                      router.push('/orcamentos')
+                    }
+                  }}
+                  className="text-red-500 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Excluir
+                </Button>
+              )}
             </div>
           </div>
         </div>

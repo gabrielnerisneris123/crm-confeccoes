@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { STATUS_CONFIG } from '@/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { usePermissao } from '@/hooks/usePermissao'
 import {
   ChevronLeft,
   Edit,
@@ -30,6 +31,8 @@ export default function ClienteDetalhePage() {
   const router = useRouter()
   const { getClienteById, toggleAtivo, removerCliente } = useClientesStore()
   const { pedidos } = usePedidosStore()
+  const { podeCriarEditar, podeExcluir } = usePermissao()
+
 
   const cliente = getClienteById(params.id as string)
 
@@ -134,45 +137,51 @@ export default function ClienteDetalhePage() {
             </div>
 
             <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleAtivo(cliente.id)}
-                className={
-                  cliente.ativo
-                    ? 'text-amber-600 border-amber-200 hover:bg-amber-50'
-                    : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'
-                }
-              >
-                {cliente.ativo ? (
-                  <>
-                    <UserX className="w-3.5 h-3.5" />
-                    Desativar
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="w-3.5 h-3.5" />
-                    Ativar
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/clientes/${cliente.id}/editar`)}
-              >
-                <Edit className="w-3.5 h-3.5" />
-                Editar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExcluir}
-                className="text-red-500 border-red-200 hover:bg-red-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Excluir
-              </Button>
+              {podeCriarEditar && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toggleAtivo(cliente.id)}
+                  className={
+                    cliente.ativo
+                      ? 'text-amber-600 border-amber-200 hover:bg-amber-50'
+                      : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'
+                  }
+                >
+                  {cliente.ativo ? (
+                    <>
+                      <UserX className="w-3.5 h-3.5" />
+                      Desativar
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-3.5 h-3.5" />
+                      Ativar
+                    </>
+                  )}
+                </Button>
+              )}
+              {podeCriarEditar && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/clientes/${cliente.id}/editar`)}
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Editar
+                </Button>
+              )}
+              {podeExcluir && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExcluir}
+                  className="text-red-500 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Excluir
+                </Button>
+              )}
             </div>
           </div>
         </div>

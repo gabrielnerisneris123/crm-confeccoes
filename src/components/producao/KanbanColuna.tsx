@@ -7,6 +7,7 @@ import { KanbanCard } from './KanbanCard'
 interface KanbanColunaProps {
   status: StatusPedido
   pedidos: Pedido[]
+  podeArrastar?: boolean
 }
 
 const COR_HEADER: Record<string, string> = {
@@ -23,7 +24,7 @@ const COR_HEADER: Record<string, string> = {
   cancelado: 'border-t-red-500',
 }
 
-export function KanbanColuna({ status, pedidos }: KanbanColunaProps) {
+export function KanbanColuna({ status, pedidos, podeArrastar = true }: KanbanColunaProps) {
   const cfg = STATUS_CONFIG[status]
   const borderCor = COR_HEADER[status] ?? 'border-t-slate-400'
 
@@ -53,7 +54,7 @@ export function KanbanColuna({ status, pedidos }: KanbanColunaProps) {
             }`}
           >
             {pedidos.map((pedido, idx) => (
-              <KanbanCard key={pedido.id} pedido={pedido} index={idx} />
+              <KanbanCard key={pedido.id} pedido={pedido} index={idx} podeArrastar={podeArrastar} />
             ))}
             {provided.placeholder}
 

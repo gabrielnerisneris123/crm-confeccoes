@@ -17,6 +17,7 @@ import {
   ShoppingBag, Search, Plus, MoreHorizontal, Eye, Edit,
   ChevronRight, Clock, AlertTriangle, CheckCircle, TrendingUp,
 } from 'lucide-react'
+import { usePermissao } from '@/hooks/usePermissao'
 import { STATUS_CONFIG, StatusPedido, PRIORIDADE_CONFIG, PrioridadePedido } from '@/types'
 import { format, isPast, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -43,6 +44,7 @@ export default function PedidosPage() {
     setBusca, setFiltroStatus, setFiltroPrioridade,
     avancarStatus, getPedidosFiltrados,
   } = usePedidosStore()
+  const { podeCriarEditar, podeAvancarStatus } = usePermissao()
 
   const filtrados = getPedidosFiltrados()
 
@@ -99,12 +101,14 @@ export default function PedidosPage() {
                   <option key={p} value={p}>{PRIORIDADE_CONFIG[p].label}</option>
                 ))}
               </select>
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
-                onClick={() => router.push('/pedidos/novo')}
-              >
-                <Plus className="w-4 h-4" /> Novo Pedido
-              </Button>
+              {podeCriarEditar && (
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
+                  onClick={() => router.push('/pedidos/novo')}
+                >
+                  <Plus className="w-4 h-4" /> Novo Pedido
+                </Button>
+              )}
             </div>
           </div>
 
@@ -213,10 +217,12 @@ export default function PedidosPage() {
                             <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.id}`)}>
                               <Eye className="w-3.5 h-3.5 mr-2" /> Ver detalhes
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.id}/editar`)}>
-                              <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            {!['entregue','cancelado'].includes(pedido.status) && (
+                            {podeCriarEditar && (
+                              <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.id}/editar`)}>
+                                <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                              </DropdownMenuItem>
+                            )}
+                            {podeAvancarStatus && !['entregue','cancelado'].includes(pedido.status) && (
                               <DropdownMenuItem onClick={() => avancarStatus(pedido.id)}>
                                 <ChevronRight className="w-3.5 h-3.5 mr-2 text-indigo-500" /> Avançar status
                               </DropdownMenuItem>

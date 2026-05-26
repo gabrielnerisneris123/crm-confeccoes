@@ -15,6 +15,7 @@ import {
   Calculator, Search, Plus, MoreHorizontal, Eye, Edit, Trash2,
   Send, CheckCircle, XCircle, TrendingUp, FileText,
 } from 'lucide-react'
+import { usePermissao } from '@/hooks/usePermissao'
 import { Orcamento } from '@/types'
 import { format, parseISO, isPast } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -39,6 +40,7 @@ const FILTROS = [
 export default function OrcamentosPage() {
   const router = useRouter()
   const { orcamentos, busca, filtroStatus, setBusca, setFiltroStatus, alterarStatus, removerOrcamento, getOrcamentosFiltrados } = useOrcamentosStore()
+  const { podeCriarEditar, podeExcluir } = usePermissao()
 
   const filtrados = getOrcamentosFiltrados()
 
@@ -71,10 +73,12 @@ export default function OrcamentosPage() {
               <Input value={busca} onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar por número ou cliente..." className="pl-9 bg-slate-50 border-slate-200 h-9" />
             </div>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
-              onClick={() => router.push('/orcamentos/novo')}>
-              <Plus className="w-4 h-4" /> Novo Orçamento
-            </Button>
+            {podeCriarEditar && (
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
+                onClick={() => router.push('/orcamentos/novo')}>
+                <Plus className="w-4 h-4" /> Novo Orçamento
+              </Button>
+            )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-0.5">
             {FILTROS.map((f) => (
@@ -159,15 +163,17 @@ export default function OrcamentosPage() {
                             <DropdownMenuItem onClick={() => router.push(`/orcamentos/${orc.id}`)}>
                               <Eye className="w-3.5 h-3.5 mr-2" /> Ver detalhes
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/orcamentos/${orc.id}/editar`)}>
-                              <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            {orc.status === 'rascunho' && (
+                            {podeCriarEditar && (
+                              <DropdownMenuItem onClick={() => router.push(`/orcamentos/${orc.id}/editar`)}>
+                                <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                              </DropdownMenuItem>
+                            )}
+                            {podeCriarEditar && orc.status === 'rascunho' && (
                               <DropdownMenuItem onClick={() => alterarStatus(orc.id, 'enviado')}>
                                 <Send className="w-3.5 h-3.5 mr-2 text-blue-500" /> Marcar como Enviado
                               </DropdownMenuItem>
                             )}
-                            {orc.status === 'enviado' && (
+                            {podeCriarEditar && orc.status === 'enviado' && (
                               <>
                                 <DropdownMenuItem onClick={() => alterarStatus(orc.id, 'aprovado')}>
                                   <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Marcar Aprovado
@@ -177,16 +183,18 @@ export default function OrcamentosPage() {
                                 </DropdownMenuItem>
                               </>
                             )}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                if (window.confirm(`Excluir orçamento "${orc.numero}"?`)) {
-                                  removerOrcamento(orc.id)
-                                }
-                              }}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 mr-2 text-red-500" /> Excluir
-                            </DropdownMenuItem>
+                            {podeExcluir && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (window.confirm(`Excluir orçamento "${orc.numero}"?`)) {
+                                    removerOrcamento(orc.id)
+                                  }
+                                }}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-2 text-red-500" /> Excluir
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

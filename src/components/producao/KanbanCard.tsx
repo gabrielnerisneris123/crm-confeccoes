@@ -10,9 +10,10 @@ import { User, Package, AlertTriangle, Clock } from 'lucide-react'
 interface KanbanCardProps {
   pedido: Pedido
   index: number
+  podeArrastar?: boolean
 }
 
-export function KanbanCard({ pedido, index }: KanbanCardProps) {
+export function KanbanCard({ pedido, index, podeArrastar = true }: KanbanCardProps) {
   const router = useRouter()
 
   const atrasado =
@@ -27,14 +28,14 @@ export function KanbanCard({ pedido, index }: KanbanCardProps) {
   const priorCfg = PRIORIDADE_CONFIG[pedido.prioridade]
 
   return (
-    <Draggable draggableId={pedido.id} index={index}>
+    <Draggable draggableId={pedido.id} index={index} isDragDisabled={!podeArrastar}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => router.push(`/pedidos/${pedido.id}`)}
-          className={`bg-white rounded-xl border p-3.5 cursor-pointer select-none transition-all ${
+          className={`bg-white rounded-xl border p-3.5 select-none transition-all ${podeArrastar ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} ${
             snapshot.isDragging
               ? 'shadow-xl border-indigo-300 rotate-1 scale-105'
               : atrasado

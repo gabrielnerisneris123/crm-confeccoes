@@ -4,63 +4,47 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard,
-  Users,
-  ShoppingBag,
-  Kanban,
-  Calculator,
-  DollarSign,
-  Settings,
-  LogOut,
-  Shirt,
-  ChevronRight,
-  Bell,
+  LayoutDashboard, Users, ShoppingBag, Kanban,
+  Calculator, DollarSign, Settings, LogOut, Shirt, ChevronRight, Bell,
 } from 'lucide-react'
 import { usePedidosStore } from '@/stores/pedidosStore'
+import { useUsuario } from '@/contexts/UsuarioContext'
+import { usePermissao } from '@/hooks/usePermissao'
 import { isPast, parseISO } from 'date-fns'
 
-const bottomItems = [
-  {
-    label: 'Configurações',
-    href: '/configuracoes',
-    icon: Settings,
-  },
-]
+const CARGO_LABELS: Record<string, string> = {
+  admin: '👑 Administrador',
+  vendedor: '💼 Vendas',
+  producao: '🏭 Produção',
+  financeiro: '💰 Financeiro',
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const { pedidos } = usePedidosStore()
+  const { usuario, logout } = useUsuario()
+  const { podeVerFinanceiro, podeVerKanban, podeVerOrcamentos, podeVerConfiguracoes } = usePermissao()
 
-  // Pedidos ativos (não entregues e não cancelados)
-  const pedidosAtivos = pedidos.filter(
-    (p) => !['entregue', 'cancelado'].includes(p.status)
-  )
-
-  // Pedidos atrasados (para badge vermelho na produção)
+  // Badges dinâmicos
+  const pedidosAtivos = pedidos.filter((p) => !['entregue', 'cancelado'].includes(p.status))
   const pedidosAtrasados = pedidos.filter(
-    (p) =>
-      !['entregue', 'cancelado'].includes(p.status) &&
-      isPast(parseISO(p.data_prazo))
+    (p) => !['entregue', 'cancelado'].includes(p.status) && isPast(parseISO(p.data_prazo))
   )
+
+  // Iniciais do usuário
+  const iniciais = usuario?.nome
+    ? usuario.nome.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'U'
 
   const navItems = [
-    {
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      badge: null as string | null,
-    },
-    {
-      label: 'Clientes',
-      href: '/clientes',
-      icon: Users,
-      badge: null as string | null,
-    },
+    { label: 'Dashboard',       href: '/dashboard',  icon: LayoutDashboard, badge: null as string | null,  mostrar: true },
+    { label: 'Clientes',        href: '/clientes',   icon: Users,           badge: null as string | null,  mostrar: true },
     {
       label: 'Pedidos',
       href: '/pedidos',
       icon: ShoppingBag,
       badge: pedidosAtivos.length > 0 ? String(pedidosAtivos.length) : null,
+      mostrar: true,
     },
     {
       label: 'Produção / Kanban',
@@ -68,20 +52,11 @@ export function Sidebar() {
       icon: Kanban,
       badge: pedidosAtrasados.length > 0 ? String(pedidosAtrasados.length) : null,
       badgeVariant: 'destructive' as const,
+      mostrar: podeVerKanban,
     },
-    {
-      label: 'Orçamentos',
-      href: '/orcamentos',
-      icon: Calculator,
-      badge: null as string | null,
-    },
-    {
-      label: 'Financeiro',
-      href: '/financeiro',
-      icon: DollarSign,
-      badge: null as string | null,
-    },
-  ]
+    { label: 'Orçamentos',      href: '/orcamentos', icon: Calculator,      badge: null as string | null,  mostrar: podeVerOrcamentos },
+    { label: 'Financeiro',      href: '/financeiro', icon: DollarSign,      badge: null as string | null,  mostrar: podeVerFinanceiro },
+  ].filter((item) => item.mostrar)
 
   return (
     <aside className="flex flex-col h-screen w-64 bg-[#0f172a] border-r border-[#1e293b] fixed left-0 top-0 z-40">
@@ -97,7 +72,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-2 mb-3">
           Menu Principal
         </p>
@@ -105,7 +80,6 @@ export function Sidebar() {
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/' && pathname.startsWith(item.href))
-
             return (
               <li key={item.href}>
                 <Link
@@ -118,7 +92,7 @@ export function Sidebar() {
                   )}
                 >
                   <item.icon className={cn(
-                    'w-4.5 h-4.5 flex-shrink-0',
+                    'w-4 h-4 flex-shrink-0',
                     isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
                   )} />
                   <span className="flex-1">{item.label}</span>
@@ -127,23 +101,19 @@ export function Sidebar() {
                       'flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold',
                       item.badgeVariant === 'destructive'
                         ? 'bg-red-500 text-white animate-pulse'
-                        : isActive
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-[#1e293b] text-slate-300'
+                        : isActive ? 'bg-indigo-500 text-white' : 'bg-[#1e293b] text-slate-300'
                     )}>
                       {item.badge}
                     </span>
                   )}
-                  {isActive && (
-                    <ChevronRight className="w-3.5 h-3.5 text-indigo-300" />
-                  )}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-indigo-300" />}
                 </Link>
               </li>
             )
           })}
         </ul>
 
-        {/* Seção Alertas */}
+        {/* Alerta de pedidos atrasados */}
         {pedidosAtrasados.length > 0 && (
           <div className="mt-6 mb-3">
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-2 mb-3">
@@ -171,26 +141,32 @@ export function Sidebar() {
         {/* User info */}
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">AD</span>
+            <span className="text-white text-xs font-bold">{iniciais}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-slate-200 text-xs font-medium truncate">Admin</p>
-            <p className="text-slate-500 text-[10px] truncate">admin@confeccoes.com</p>
+            <p className="text-slate-200 text-xs font-medium truncate">
+              {usuario?.nome ?? 'Carregando...'}
+            </p>
+            <p className="text-slate-500 text-[10px] truncate">
+              {usuario?.cargo ? CARGO_LABELS[usuario.cargo] : '—'}
+            </p>
           </div>
         </div>
 
-        {bottomItems.map((item) => (
+        {/* Configurações — apenas admin */}
+        {podeVerConfiguracoes && (
           <Link
-            key={item.href}
-            href={item.href}
+            href="/configuracoes"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-[#1e293b] hover:text-slate-200 transition-all"
           >
-            <item.icon className="w-4 h-4 text-slate-500" />
-            {item.label}
+            <Settings className="w-4 h-4 text-slate-500" />
+            Configurações
           </Link>
-        ))}
+        )}
+
+        {/* Sair */}
         <button
-          onClick={() => alert('Para fazer logout, configure a autenticação com Supabase.')}
+          onClick={logout}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full mt-1"
         >
           <LogOut className="w-4 h-4" />

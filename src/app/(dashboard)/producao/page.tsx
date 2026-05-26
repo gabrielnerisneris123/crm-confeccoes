@@ -5,6 +5,7 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd'
 import { Header } from '@/components/shared/Header'
 import { KanbanColuna } from '@/components/producao/KanbanColuna'
 import { usePedidosStore } from '@/stores/pedidosStore'
+import { usePermissao } from '@/hooks/usePermissao'
 import { StatusPedido, STATUS_CONFIG, PRIORIDADE_CONFIG, PrioridadePedido } from '@/types'
 import { Input } from '@/components/ui/input'
 import { Search, AlertTriangle, LayoutGrid } from 'lucide-react'
@@ -17,6 +18,7 @@ const COLUNAS_KANBAN: StatusPedido[] = [
 
 export default function ProducaoPage() {
   const { pedidos, atualizarPedido } = usePedidosStore()
+  const { podeAvancarStatus } = usePermissao()
   const [busca, setBusca] = useState('')
   const [filtroPrioridade, setFiltroPrioridade] = useState('')
   const [mostrarCancelados, setMostrarCancelados] = useState(false)
@@ -48,6 +50,7 @@ export default function ProducaoPage() {
       })
 
   const onDragEnd = (result: DropResult) => {
+    if (!podeAvancarStatus) return
     const { destination, source, draggableId } = result
     if (!destination) return
     if (
@@ -148,6 +151,7 @@ export default function ProducaoPage() {
                 key={status}
                 status={status}
                 pedidos={getPedidosDaColuna(status)}
+                podeArrastar={podeAvancarStatus}
               />
             ))}
           </div>

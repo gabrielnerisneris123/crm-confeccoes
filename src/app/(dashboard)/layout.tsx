@@ -1,4 +1,5 @@
 import { Sidebar } from '@/components/shared/Sidebar'
+import { Providers } from '@/components/shared/Providers'
 
 export default function DashboardLayout({
   children,
@@ -6,11 +7,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      <Sidebar />
-      <main className="flex-1 ml-64 overflow-y-auto">
-        {children}
-      </main>
-    </div>
+    <Providers>
+      <div className="flex h-screen overflow-hidden bg-slate-50">
+        <Sidebar />
+        <main className="flex-1 ml-64 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </Providers>
   )
 }

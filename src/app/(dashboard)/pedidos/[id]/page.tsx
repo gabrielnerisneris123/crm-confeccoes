@@ -19,6 +19,7 @@ import {
   CreditCard, Calendar, Truck, Clock, AlertTriangle,
   ImageIcon, MessageCircle,
 } from 'lucide-react'
+import { usePermissao } from '@/hooks/usePermissao'
 import { STATUS_CONFIG, PedidoArte } from '@/types'
 
 type Tab = 'detalhes' | 'artes' | 'timeline'
@@ -27,6 +28,7 @@ export default function PedidoDetalhePage() {
   const params = useParams()
   const router = useRouter()
   const { getPedidoById, avancarStatus, atualizarPedido, removerPedido } = usePedidosStore()
+  const { podeCriarEditar, podeExcluir, podeAvancarStatus } = usePermissao()
   const [tab, setTab] = useState<Tab>('detalhes')
   const [whatsOpen, setWhatsOpen] = useState(false)
 
@@ -103,17 +105,21 @@ export default function PedidoDetalhePage() {
               <Button variant="outline" onClick={() => setWhatsOpen(true)} className="text-green-600 border-green-200 hover:bg-green-50">
                 <MessageCircle className="w-4 h-4" /> WhatsApp
               </Button>
-              {podeAvancar && (
+              {podeAvancarStatus && podeAvancar && (
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => avancarStatus(pedido.id)}>
                   <ChevronRight className="w-4 h-4" /> Avançar Status
                 </Button>
               )}
-              <Button variant="outline" onClick={() => router.push(`/pedidos/${pedido.id}/editar`)}>
-                <Edit className="w-4 h-4" /> Editar
-              </Button>
-              <Button variant="outline" onClick={handleExcluir} className="text-red-500 border-red-200 hover:bg-red-50">
-                <Trash2 className="w-4 h-4" /> Excluir
-              </Button>
+              {podeCriarEditar && (
+                <Button variant="outline" onClick={() => router.push(`/pedidos/${pedido.id}/editar`)}>
+                  <Edit className="w-4 h-4" /> Editar
+                </Button>
+              )}
+              {podeExcluir && (
+                <Button variant="outline" onClick={handleExcluir} className="text-red-500 border-red-200 hover:bg-red-50">
+                  <Trash2 className="w-4 h-4" /> Excluir
+                </Button>
+              )}
             </div>
           </div>
         </div>

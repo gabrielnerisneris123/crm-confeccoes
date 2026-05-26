@@ -41,6 +41,7 @@ import {
   MapPin,
   Building2,
 } from 'lucide-react'
+import { usePermissao } from '@/hooks/usePermissao'
 import { Cliente } from '@/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -70,6 +71,7 @@ export default function ClientesPage() {
     toggleAtivo,
     getClientesFiltrados,
   } = useClientesStore()
+  const { podeCriarEditar } = usePermissao()
 
   const [viewMode, setViewMode] = useState<ViewMode>('tabela')
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -211,13 +213,15 @@ export default function ClientesPage() {
                 </button>
               </div>
 
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
-                onClick={() => router.push('/clientes/novo')}
-              >
-                <Plus className="w-4 h-4" />
-                Novo Cliente
-              </Button>
+              {podeCriarEditar && (
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
+                  onClick={() => router.push('/clientes/novo')}
+                >
+                  <Plus className="w-4 h-4" />
+                  Novo Cliente
+                </Button>
+              )}
             </div>
           </div>
 
@@ -395,27 +399,31 @@ export default function ClientesPage() {
                               <Eye className="w-3.5 h-3.5 mr-2" />
                               Ver detalhes
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleEditar(cliente.id)}
-                            >
-                              <Edit className="w-3.5 h-3.5 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => toggleAtivo(cliente.id)}
-                            >
-                              {cliente.ativo ? (
-                                <>
-                                  <Ban className="w-3.5 h-3.5 mr-2 text-red-500" />
-                                  Desativar
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" />
-                                  Ativar
-                                </>
-                              )}
-                            </DropdownMenuItem>
+                            {podeCriarEditar && (
+                              <DropdownMenuItem
+                                onClick={() => handleEditar(cliente.id)}
+                              >
+                                <Edit className="w-3.5 h-3.5 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                            )}
+                            {podeCriarEditar && (
+                              <DropdownMenuItem
+                                onClick={() => toggleAtivo(cliente.id)}
+                              >
+                                {cliente.ativo ? (
+                                  <>
+                                    <Ban className="w-3.5 h-3.5 mr-2 text-red-500" />
+                                    Desativar
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" />
+                                    Ativar
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -442,6 +450,7 @@ export default function ClientesPage() {
                     onEditar={handleEditar}
                     iniciais={iniciais}
                     formatarValor={formatarValor}
+                    podeEditar={podeCriarEditar}
                   />
                 ))}
               </div>
@@ -496,12 +505,14 @@ function ClienteCard({
   onEditar,
   iniciais,
   formatarValor,
+  podeEditar,
 }: {
   cliente: Cliente
   onVerDetalhes: (c: Cliente) => void
   onEditar: (id: string) => void
   iniciais: (n: string) => string
   formatarValor: (v?: number) => string
+  podeEditar: boolean
 }) {
   return (
     <div
@@ -584,12 +595,14 @@ function ClienteCard({
         >
           Ver detalhes
         </button>
-        <button
-          onClick={() => onEditar(cliente.id)}
-          className="flex-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg py-2 transition-colors border border-indigo-200"
-        >
-          Editar
-        </button>
+        {podeEditar && (
+          <button
+            onClick={() => onEditar(cliente.id)}
+            className="flex-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg py-2 transition-colors border border-indigo-200"
+          >
+            Editar
+          </button>
+        )}
       </div>
     </div>
   )

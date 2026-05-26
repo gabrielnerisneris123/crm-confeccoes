@@ -1,6 +1,12 @@
 import { create } from 'zustand'
-import { Orcamento, OrcamentoItem } from '@/types'
+import { Orcamento } from '@/types'
 import { mockClientes } from '@/lib/mock-data'
+import {
+  getOrcamentos, createOrcamentoDB, updateOrcamentoDB, deleteOrcamentoDB,
+  gerarNumeroOrcamento,
+} from '@/lib/supabase/queries'
+
+type SB = Parameters<typeof getOrcamentos>[0]
 
 const mockOrcamentos: Orcamento[] = [
   {
@@ -67,14 +73,22 @@ interface OrcamentosState {
   orcamentos: Orcamento[]
   busca: string
   filtroStatus: string
+  isLoading: boolean
+  _inicializado: boolean
 
   setBusca: (v: string) => void
   setFiltroStatus: (v: string) => void
 
-  adicionarOrcamento: (dados: Omit<Orcamento, 'id' | 'numero' | 'criado_em' | 'atualizado_em'>) => Orcamento
-  atualizarOrcamento: (id: string, dados: Partial<Orcamento>) => void
-  removerOrcamento: (id: string) => void
-  alterarStatus: (id: string, status: Orcamento['status']) => void
+  inicializar: (supabase: SB) => Promise<void>
+
+  adicionarOrcamento: (
+    dados: Omit<Orcamento, 'id' | 'numero' | 'criado_em' | 'atualizado_em'>,
+    supabase?: SB,
+    usuarioId?: string
+  ) => Promise<Orcamento>
+  atualizarOrcamento: (id: string, dados: Partial<Orcamento>, supabase?: SB) => void
+  removerOrcamento: (id: string, supabase?: SB) => void
+  alterarStatus: (id: string, status: Orcamento['status'], supabase?: SB) => void
 
   getOrcamentoById: (id: string) => Orcamento | undefined
   getOrcamentosFiltrados: () => Orcamento[]
@@ -84,39 +98,81 @@ export const useOrcamentosStore = create<OrcamentosState>((set, get) => ({
   orcamentos: mockOrcamentos,
   busca: '',
   filtroStatus: '',
+  isLoading: false,
+  _inicializado: false,
 
   setBusca: (busca) => set({ busca }),
   setFiltroStatus: (filtroStatus) => set({ filtroStatus }),
 
-  adicionarOrcamento: (dados) => {
-    const numero = `ORC-2024-${String(contadorOrc++).padStart(3, '0')}`
+  inicializar: async (supabase) => {
+    if (get()._inicializado) return
+    set({ isLoading: true })
+    try {
+      const orcamentos = await getOrcamentos(supabase)
+      contadorOrc = orcamentos.length + 1
+      set({ orcamentos, isLoading: false, _inicializado: true })
+    } catch (err) {
+      console.error('[orcamentosStore] Erro ao carregar:', err)
+      set({ isLoading: false })
+    }
+  },
+
+  adicionarOrcamento: async (dados, supabase?, usuarioId?) => {
+    const numero = `ORC-${new Date().getFullYear()}-${String(contadorOrc++).padStart(3, '0')}`
+    const tempId = `ORC-${Date.now()}`
     const novo: Orcamento = {
       ...dados,
-      id: `ORC-${Date.now()}`,
+      id: tempId,
       numero,
       criado_em: new Date().toISOString(),
       atualizado_em: new Date().toISOString(),
     }
     set((s) => ({ orcamentos: [novo, ...s.orcamentos] }))
+
+    if (supabase) {
+      try {
+        const numeroSupabase = await gerarNumeroOrcamento(supabase)
+        const { itens, cliente: _cl, ...rest } = dados
+        const salvo = await createOrcamentoDB(supabase, rest, itens ?? [], numeroSupabase, usuarioId)
+        set((s) => ({
+          orcamentos: s.orcamentos.map((o) => (o.id === tempId ? salvo : o)),
+        }))
+        return salvo
+      } catch (err) {
+        console.error('[orcamentosStore] Erro ao salvar:', err)
+      }
+    }
     return novo
   },
 
-  atualizarOrcamento: (id, dados) =>
+  atualizarOrcamento: (id, dados, supabase?) => {
     set((s) => ({
       orcamentos: s.orcamentos.map((o) =>
         o.id === id ? { ...o, ...dados, atualizado_em: new Date().toISOString() } : o
       ),
-    })),
+    }))
+    if (supabase) {
+      updateOrcamentoDB(supabase, id, dados).catch(console.error)
+    }
+  },
 
-  removerOrcamento: (id) =>
-    set((s) => ({ orcamentos: s.orcamentos.filter((o) => o.id !== id) })),
+  removerOrcamento: (id, supabase?) => {
+    set((s) => ({ orcamentos: s.orcamentos.filter((o) => o.id !== id) }))
+    if (supabase) {
+      deleteOrcamentoDB(supabase, id).catch(console.error)
+    }
+  },
 
-  alterarStatus: (id, status) =>
+  alterarStatus: (id, status, supabase?) => {
     set((s) => ({
       orcamentos: s.orcamentos.map((o) =>
         o.id === id ? { ...o, status, atualizado_em: new Date().toISOString() } : o
       ),
-    })),
+    }))
+    if (supabase) {
+      updateOrcamentoDB(supabase, id, { status }).catch(console.error)
+    }
+  },
 
   getOrcamentoById: (id) => get().orcamentos.find((o) => o.id === id),
 
